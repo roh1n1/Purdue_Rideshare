@@ -1,12 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for
 import mysql.connector
+import os
 
 app = Flask(__name__)
+
 def get_db():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="password123",
+        password=os.environ.get("DB_PASSWORD", "password123"),
         database="purdue_rideshare"
     )
 
