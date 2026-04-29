@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head><title>Ride Requests</title></head>
+<body>
+    <h1>Requests for Ride to {{ ride.destination }}</h1>
+    <p><strong>Date:</strong> {{ ride.departure_date }} at {{ ride.departure_time }}</p>
+    <p><strong>Meetup:</strong> {{ ride.meetup_location }}</p>
+    <a href="/">← Back to Home</a>
+    <hr>
+
+    {% if requests %}
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Student</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+        {% for req in requests %}
+        <tr>
+            <td>{{ req.name }}</td>
+            <td>{{ req.email }}</td>
+            <td>{{ req.phone }}</td>
+            <td>{{ req.status }}</td>
+            <td>
+                {% if req.status == 'pending' %}
+                <form method="POST" action="/requests/{{ req.request_id }}/accept" style="display:inline">
+                    <button type="submit">Accept</button>
+                </form>
+                <form method="POST" action="/requests/{{ req.request_id }}/decline" style="display:inline">
+                    <button type="submit">Decline</button>
+                </form>
+                {% else %}
+                {{ req.status }}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No requests yet for this ride.</p>
+    {% endif %}
+</body>
+</html>

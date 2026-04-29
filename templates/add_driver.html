@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head><title>Register Driver</title></head>
+<body>
+    <h1>Register as a Driver</h1>
+    {% if students %}
+    <form method="POST">
+        <label>Student:</label><br>
+        <select name="student_id">
+            {% for s in students %}
+            <option value="{{ s.student_id }}">{{ s.name }}</option>
+            {% endfor %}
+        </select><br><br>
+
+        <label>Car Model:</label><br>
+        <input type="text" name="car_model" required><br><br>
+
+        <label>License Plate:</label><br>
+        <input type="text" name="license_plate" required><br><br>
+
+        <label>Car Color:</label><br>
+        <input type="text" name="car_color" required><br><br>
+
+        <button type="submit">Register Driver</button>
+        <a href="/">Cancel</a>
+    </form>
+    {% else %}
+    <p>No eligible students found. <a href="/students/add">Add a student first.</a></p>
+    {% endif %}
+</body>
+</html>

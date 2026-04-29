@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head><title>Purdue Rideshare</title></head>
+<body>
+    <h1>Purdue Rideshare</h1>
+    <a href="/rides/add">+ Post a Ride</a> |
+    <a href="/drivers/add">+ Register Driver</a> |
+    <a href="/students/add">+ Add Student</a> |
+    <a href="/report">📊 Report</a>
+    <hr>
+
+    <h2>Available Rides</h2>
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Driver</th>
+            <th>Destination</th>
+            <th>Meetup Location</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Seats</th>
+            <th>Description</th>
+            <th>Requests</th>
+            <th>Accepted</th>
+            <th>Actions</th>
+        </tr>
+        {% for ride in rides %}
+        <tr>
+            <td>{{ ride.driver_name }}</td>
+            <td>{{ ride.destination }}</td>
+            <td>{{ ride.meetup_location }}</td>
+            <td>{{ ride.departure_date }}</td>
+            <td>{{ ride.departure_time }}</td>
+            <td>{{ ride.seats_available }}</td>
+            <td>{{ ride.description }}</td>
+            <td>{{ ride.request_count }}</td>
+            <td>{{ ride.accepted_count }}</td>
+            <td>
+                <a href="/rides/edit/{{ ride.ride_id }}">Edit</a> |
+                <form method="POST" action="/rides/delete/{{ ride.ride_id }}" style="display:inline">
+                    <button type="submit" onclick="return confirm('Delete this ride?')">Delete</button>
+                </form> |
+                <a href="/rides/{{ ride.ride_id }}/requests">View Requests</a> |
+                <form method="POST" action="/rides/request/{{ ride.ride_id }}" style="display:inline">
+                    <select name="student_id">
+                        {% for student in students %}
+                        <option value="{{ student.student_id }}">{{ student.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Request</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

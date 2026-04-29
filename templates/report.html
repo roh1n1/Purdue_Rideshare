@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head><title>Rides Report</title></head>
+<body>
+    <h1>Rides Report</h1>
+    <a href="/">← Back to Home</a>
+    <hr>
+
+    <h2>Filter Rides</h2>
+    <form method="GET">
+        <label>Start Date:</label>
+        <input type="date" name="start_date" value="{{ start_date }}">
+
+        <label>End Date:</label>
+        <input type="date" name="end_date" value="{{ end_date }}">
+
+        <label>Destination:</label>
+        <select name="destination">
+            <option value="">-- All Destinations --</option>
+            {% for d in destinations %}
+            <option value="{{ d.destination }}"
+                {% if d.destination == destination %}selected{% endif %}>
+                {{ d.destination }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Generate Report</button>
+        <a href="/report">Clear Filters</a>
+    </form>
+    <hr>
+
+    {% if stats %}
+    <h2>Summary Statistics</h2>
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Total Rides</th>
+            <th>Avg Seats Available</th>
+            <th>Avg Requests per Ride</th>
+            <th>Avg Accepted per Ride</th>
+            <th>Overall Acceptance Rate</th>
+        </tr>
+        <tr>
+            <td>{{ stats.total_rides }}</td>
+            <td>{{ stats.avg_seats }}</td>
+            <td>{{ stats.avg_requests }}</td>
+            <td>{{ stats.avg_accepted }}</td>
+            <td>{{ stats.acceptance_rate }}%</td>
+        </tr>
+    </table>
+    {% endif %}
+
+    <h2>Matching Rides ({{ rides|length }} found)</h2>
+    {% if rides %}
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Driver</th>
+            <th>Destination</th>
+            <th>Meetup Location</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Seats</th>
+            <th>Requests</th>
+            <th>Accepted</th>
+            <th>Description</th>
+        </tr>
+        {% for ride in rides %}
+        <tr>
+            <td>{{ ride.driver_name }}</td>
+            <td>{{ ride.destination }}</td>
+            <td>{{ ride.meetup_location }}</td>
+            <td>{{ ride.departure_date }}</td>
+            <td>{{ ride.departure_time }}</td>
+            <td>{{ ride.seats_available }}</td>
+            <td>{{ ride.request_count }}</td>
+            <td>{{ ride.accepted_count }}</td>
+            <td>{{ ride.description }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>No rides found matching your filters.</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head><title>Edit Ride</title></head>
+<body>
+    <h1>Edit Ride</h1>
+    <form method="POST">
+        <label>Driver:</label><br>
+        <select name="driver_id">
+            {% for driver in drivers %}
+            <option value="{{ driver.driver_id }}"
+                {% if driver.driver_id == ride.driver_id %}selected{% endif %}>
+                {{ driver.name }} ({{ driver.car_color }} {{ driver.car_model }})
+            </option>
+            {% endfor %}
+        </select><br><br>
+
+        <label>Meetup Location:</label><br>
+        <input type="text" name="meetup_location" value="{{ ride.meetup_location }}" required><br><br>
+
+        <label>Destination:</label><br>
+        <input type="text" name="destination" value="{{ ride.destination }}" required><br><br>
+
+        <label>Departure Date:</label><br>
+        <input type="date" name="departure_date" value="{{ ride.departure_date }}" required><br><br>
+
+        <label>Departure Time:</label><br>
+        <input type="time" name="departure_time" value="{{ ride.departure_time }}" required><br><br>
+
+        <label>Seats Available:</label><br>
+        <input type="number" name="seats_available" value="{{ ride.seats_available }}" min="1" required><br><br>
+
+        <label>Description:</label><br>
+        <textarea name="description">{{ ride.description }}</textarea><br><br>
+
+        <button type="submit">Save Changes</button>
+        <a href="/">Cancel</a>
+    </form>
+</body>
+</html>
