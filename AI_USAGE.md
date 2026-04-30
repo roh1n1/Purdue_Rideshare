@@ -4,13 +4,18 @@
 - Claude (Anthropic)
 
 ## Tasks AI Assisted With
-- Explaining Flask route structure and how parameterized queries prevent SQL injection
-- Suggesting which indexes to create based on the application's query patterns
-- Explaining transaction concepts (isolation levels, FOR UPDATE locks, rollback)
-- Drafting the transaction code for request_ride and update_request routes
+- Generating boilerplate Flask route structure and Jinja2 templates
+- Writing and debugging SQL JOIN queries for the home page and report page
+- Suggesting index strategy based on query patterns in the application
+- Drafting transaction logic with appropriate isolation levels
 - Guiding the GitHub setup process
 
 ## How Output Was Verified and Modified
+- All SQL queries were tested manually against the MySQL database in Workbench
+- Indexes were confirmed with EXPLAIN SELECT to verify they were being used
+- Flask routes were tested end-to-end in the browser
+- MySQL documentation was consulted to verify isolation level behavior
+- AI-suggested code was reviewed and modified to fit our schema
 - Ran all CREATE INDEX statements in MySQL Workbench and confirmed with SHOW INDEX
 - Ran EXPLAIN queries in MySQL Workbench to verify indexes are actually being used
 - Tested every route in the browser (add student, add driver, post ride,
