@@ -32,3 +32,8 @@ Built with Python (Flask) and MySQL for CS348: Information Systems.
 3. In `app.py`, update `get_db()` with your MySQL credentials
 4. Run the app: python app.py
 5. Open your browser to `http://127.0.0.1:5000`
+
+## Deployment
+A live version of this app is deployed to Google Cloud Platform.
+- **Live URL:** https://purdue-rideshare.uc.r.appspot.com (available through May 15, 2026)
+- The GCP deployment code (modified `app.py`, `app.yaml`, `requirements.txt`) is on the `gcp-deployment` branch of this repository.
