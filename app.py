@@ -1,22 +1,42 @@
 from flask import Flask, render_template, request, redirect, url_for
-import mysql.connector
 import os
 
 app = Flask(__name__)
 
 def get_db():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password=os.environ.get("DB_PASSWORD", "password123"),
-        database="purdue_rideshare"
-    )
+    if os.environ.get("CLOUD_SQL_CONNECTION_NAME"):
+        from google.cloud.sql.connector import Connector
+        import pymysql
+        connector = Connector()
+        conn = connector.connect(
+            os.environ["CLOUD_SQL_CONNECTION_NAME"],
+            "pymysql",
+            user=os.environ["DB_USER"],
+            password=os.environ["DB_PASS"],
+            db=os.environ["DB_NAME"],
+        )
+        return conn
+    else:
+        import mysql.connector
+        return mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password=os.environ.get("DB_PASSWORD", "password123"),
+            database="purdue_rideshare"
+        )
+
+def get_cursor(db):
+    if os.environ.get("CLOUD_SQL_CONNECTION_NAME"):
+        import pymysql
+        return db.cursor(pymysql.cursors.DictCursor)
+    else:
+        return db.cursor(dictionary=True)
 
 # Home page - list all rides
 @app.route("/")
 def index():
     db = get_db()
-    cursor = db.cursor(dictionary=True)
+    cursor = get_cursor(db)
     cursor.execute("""
         SELECT r.ride_id, r.destination, r.meetup_location, r.departure_date,
                r.departure_time, r.seats_available, r.description,
@@ -38,7 +58,7 @@ def index():
 @app.route("/rides/add", methods=["GET", "POST"])
 def add_ride():
     db = get_db()
-    cursor = db.cursor(dictionary=True)
+    cursor = get_cursor(db)
     if request.method == "POST":
         cursor.execute("""
             INSERT INTO Rides (driver_id, meetup_location, destination,
@@ -70,7 +90,7 @@ def add_ride():
 @app.route("/rides/edit/<int:ride_id>", methods=["GET", "POST"])
 def edit_ride(ride_id):
     db = get_db()
-    cursor = db.cursor(dictionary=True)
+    cursor = get_cursor(db)
     if request.method == "POST":
         cursor.execute("""
             UPDATE Rides SET driver_id=%s, meetup_location=%s, destination=%s,
@@ -105,7 +125,7 @@ def edit_ride(ride_id):
 @app.route("/rides/delete/<int:ride_id>", methods=["POST"])
 def delete_ride(ride_id):
     db = get_db()
-    cursor = db.cursor()
+    cursor = get_cursor(db)
     cursor.execute("DELETE FROM RideRequests WHERE ride_id = %s", (ride_id,))
     cursor.execute("DELETE FROM Rides WHERE ride_id = %s", (ride_id,))
     db.commit()
@@ -117,7 +137,7 @@ def delete_ride(ride_id):
 @app.route("/report")
 def report():
     db = get_db()
-    cursor = db.cursor(dictionary=True)
+    cursor = get_cursor(db)
     start_date = request.args.get("start_date", "")
     end_date = request.args.get("end_date", "")
     destination = request.args.get("destination", "")
@@ -172,7 +192,7 @@ def report():
 @app.route("/students/add", methods=["GET", "POST"])
 def add_student():
     db = get_db()
-    cursor = db.cursor(dictionary=True)
+    cursor = get_cursor(db)
     if request.method == "POST":
         cursor.execute("""
             INSERT INTO Students (name, email, phone) VALUES (%s, %s, %s)
@@ -189,7 +209,7 @@ def add_student():
 @app.route("/drivers/add", methods=["GET", "POST"])
 def add_driver():
     db = get_db()
-    cursor = db.cursor(dictionary=True)
+    cursor = get_cursor(db)
     if request.method == "POST":
         cursor.execute("""
             INSERT INTO Drivers (student_id, car_model, license_plate, car_color)
@@ -213,19 +233,15 @@ def add_driver():
 @app.route("/rides/request/<int:ride_id>", methods=["POST"])
 def request_ride(ride_id):
     db = get_db()
-    cursor = db.cursor(dictionary=True)
+    cursor = get_cursor(db)
     try:
-        # REPEATABLE READ prevents phantom reads if two students
-        # request the same ride simultaneously
         cursor.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
         cursor.execute("START TRANSACTION")
-
         student_id = request.form["student_id"]
         cursor.execute("""
             SELECT * FROM RideRequests WHERE ride_id=%s AND student_id=%s FOR UPDATE
         """, (ride_id, student_id))
         existing = cursor.fetchone()
-
         if not existing:
             cursor.execute("""
                 INSERT INTO RideRequests (ride_id, student_id, status) VALUES (%s, %s, 'pending')
@@ -233,7 +249,6 @@ def request_ride(ride_id):
             cursor.execute("""
                 UPDATE Rides SET request_count = request_count + 1 WHERE ride_id = %s
             """, (ride_id,))
-
         db.commit()
     except Exception as e:
         db.rollback()
@@ -243,11 +258,11 @@ def request_ride(ride_id):
         db.close()
     return redirect(url_for("index"))
 
-# View requests for a ride (driver's view)
+# View requests for a ride
 @app.route("/rides/<int:ride_id>/requests")
 def view_requests(ride_id):
     db = get_db()
-    cursor = db.cursor(dictionary=True)
+    cursor = get_cursor(db)
     cursor.execute("""
         SELECT rr.request_id, rr.status, s.name, s.email, s.phone
         FROM RideRequests rr
@@ -270,29 +285,23 @@ def view_requests(ride_id):
 @app.route("/requests/<int:request_id>/<action>", methods=["POST"])
 def update_request(request_id, action):
     db = get_db()
-    cursor = db.cursor(dictionary=True)
+    cursor = get_cursor(db)
     try:
-        # SERIALIZABLE prevents two drivers from accepting the same
-        # request concurrently, ensuring accepted_count stays accurate
         cursor.execute("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
         cursor.execute("START TRANSACTION")
-
         status = "accepted" if action == "accept" else "declined"
         cursor.execute("""
             SELECT ride_id FROM RideRequests WHERE request_id = %s FOR UPDATE
         """, (request_id,))
         row = cursor.fetchone()
         ride_id = row["ride_id"]
-
         cursor.execute("""
             UPDATE RideRequests SET status = %s WHERE request_id = %s
         """, (status, request_id))
-
         if status == "accepted":
             cursor.execute("""
                 UPDATE Rides SET accepted_count = accepted_count + 1 WHERE ride_id = %s
             """, (ride_id,))
-
         db.commit()
     except Exception as e:
         db.rollback()
