@@ -1,0 +1,7 @@
+runtime: python39
+
+env_variables:
+  DB_USER: root
+  DB_PASS: Purdue348!
+  DB_NAME: purdue_rideshare
+  CLOUD_SQL_CONNECTION_NAME: purdue-rideshare:us-central1:purdue-rideshare-db
